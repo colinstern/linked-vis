@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="https://dc-js.github.io/dc.js/css/dc.css" />
+  <script src="https://dc-js.github.io/dc.js/js/d3.js"></script>
+  <script src="https://dc-js.github.io/dc.js/js/crossfilter.js"></script>
+  <script src="https://dc-js.github.io/dc.js/js/dc.js"></script>
+  <script src="https://rawgit.com/crossfilter/reductio/master/reductio.js"></script>
+  <script src="https://npmcdn.com/universe@latest/universe.js"></script>
+  <script type="text/javascript" src="colorbrewer.js"></script>
+  <style>
+  </style>
+  <title>YOLO</title>
+</head>
+
+<body>
+  <div id="test"></div>
+  <div class="row">
+    <div id="monthly-bubble-chart" class="dc-chart">
+        <strong>Monthly Performance</strong> (radius: engaged users, color: lifetime total post impressions gain)
+        <a class="reset" href="javascript:yearlyBubbleChart.filterAll();dc.redrawAll();"
+           style="display: none;">reset</a>
+        <div class="clearfix"></div>
+    </div>
+</div>
+
+
+  <script>
+  'use strict';
+
+  /* jshint globalstrict: true */
+  /* global dc,d3,crossfilter,colorbrewer */
+
+  /* Create chart objects */
+  /* scatterplot */
+  var yearlyBubbleChart = dc.bubbleChart('#monthly-bubble-chart');
+  /* line chart */
+  //var moveChart = dc.lineChart('#monthly-move-chart');
+  /* histogram */
+  //var dayOfWeekChart = dc.rowChart('#day-of-week-chart');
+  /* heatmap */
+  //??
+
+
+  d3.csv('dataset_Facebook-table.csv', function(data) {
+    var numberFormat = d3.format('r');
+
+    data.forEach(function (d) {
+      d.PageTotalLikes = +d.PageTotalLikes;
+      /* TODO Get month name */
+      d.PostMonth = +d.PostMonth;
+      /* TODO Get weekday name */
+      d.PostWeekday = +d.PostWeekday;
+      d.PostHour = +d.PostHour;
+      d.LifetimePostTotalImpressions = + d.LifetimePostTotalImpressions;
+      d.LifetimeEngagedUsers = +d.LifetimeEngagedUsers;
+      d.LifetimePostConsumptions = +d.LifetimePostConsumptions;
+      d.LifetimePostImpressionsbypeoplewhohavelikedyourPage = +d.LifetimePostImpressionsbypeoplewhohavelikedyourPage;
+    });
+
+
+    var fb = crossfilter(data);
+    var all = fb.groupAll();
+
+    var monthlyDimension = fb.dimension(function (d) {
+      return d.PostMonth;
+    });
+
+
+    var monthlyPerformanceGroup = monthlyDimension.group().reduce(
+    /* callback for when data is added to the current filter results */
+    function (p, v) {
+        ++p.count;
+        p.impressionsGain += v.LifetimePostTotalImpressions;
+        p.usersGain += v.LifetimeEngagedUsers;
+        p.avgImpressions = p.impressionsGain / p.count;
+        p.percentageGain = p.avgImpressions ? Math.round((p.impressionsGain / p.avgImpressions) * 100) : 0;
+        return p;
+    },
+    /* callback for when data is removed from the current filter results */
+    function (p, v) {
+        --p.count;
+        p.impressionsGain -= v.LifetimePostTotalImpressions;
+        p.usersGain -= v.LifetimeEngagedUsers;
+        p.avgImpressions = p.impressionsGain / p.count;
+        p.percentageGain = p.avgImpressions ? Math.round((p.impressionsGain / p.avgImpressions) * 100) : 0;
+    },
+    /* initialize p */
+    function () {
+        return {
+            count: 0,
+            impressionsGain: 0,
+            usersGain: 0,
+            avgImpressions: 0,
+            percentageGain: 0,
+        };
+    }
+);
+
+var monthlyLikeGroup = monthlyDimension.group().reduceSum(function (d) {
+  return d.PageTotalLikes;
+});
+
+var dayOfWeek = fb.dimension(function (d) {
+    var day = d.PostWeekday;
+    var name = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return day + '.' + name[day - 1];
+});
+var dayOfWeekGroup = dayOfWeek.group();
+
+function nameOfMonth (d) {
+  var name = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return name[d - 1];
+}
+
+yearlyBubbleChart
+    .width(990)
+    .height(240)
+    .transitionDuration(1500)
+    .margins({top: 10, right: 50, bottom: 30, left: 40})
+    .dimension(monthlyDimension)
+    .group(monthlyPerformanceGroup)
+    .colors(colorbrewer.RdYlGn[9])
+    .colorDomain([0, 2300000])
+
+    .colorAccessor(function (d) {
+        return d.value.impressionsGain;
+    })
+
+    .keyAccessor(function (p) {
+        return p.value.impressionsGain;
+    })
+
+    .valueAccessor(function (p) {
+        return p.value.percentageGain;
+    })
+
+    .radiusValueAccessor(function (p) {
+        return p.value.usersGain;
+    })
+
+    .maxBubbleRelativeSize(0.3)
+    .x(d3.scale.linear().domain([0, 250000]))
+    .y(d3.scale.linear().domain([0, 60000]))
+    .r(d3.scale.linear().domain([0, 500000]))
+
+    .elasticY(true)
+    .elasticX(true)
+
+    .yAxisPadding(100)
+    .xAxisPadding(500)
+
+    .renderHorizontalGridLines(true)
+    .renderVerticalGridLines(true)
+
+    .xAxisLabel('Lifetime Total Post Impressions Gain')
+    .yAxisLabel('Gain %')
+
+    .renderLabel(true)
+    .label(function (p) {
+        return nameOfMonth(p.key);
+    })
+
+    .renderTitle(true)
+    .title(function (p) {
+        return [
+            nameOfMonth(p.key),
+            'Impressions Gain: ' + numberFormat(p.value.impressionsGain),
+            'Impressions Gain in Percentage: ' + numberFormat(p.value.percentageGain) + '%',
+            'Total Lifetime Engaged Users: ' + numberFormat(p.value.usersGain)
+        ].join('\n');
+    })
+
+    .yAxis().tickFormat(function (v) {
+        return v + '%';
+    });
+
+    dc.renderAll();
+
+  });
+
+
+  </script>
+</body>
