@@ -14,7 +14,7 @@
 </head>
 
 <body>
-  <div id="test"></div>
+
   <div class="row">
     <div id="monthly-bubble-chart" class="dc-chart">
         <strong>Monthly Performance</strong> (radius: engaged users, color: lifetime total post impressions gain)
@@ -24,6 +24,23 @@
     </div>
 </div>
 
+<div class="row">
+  <div id="day-of-week-chart">
+       <strong>Day of Week</strong>
+       <a class="reset" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+       <div class="clearfix"></div>
+   </div>
+</div>
+
+<div class="row">
+    <div id="monthly-move-chart">
+        <strong>Monthly Like Chart</strong>
+        <span class="reset" style="display: none;">range: <span class="filter"></span></span>
+        <a class="reset" href="javascript:moveChart.filterAll();volumeChart.filterAll();dc.redrawAll();"
+           style="display: none;">reset</a>
+        <div class="clearfix"></div>
+    </div>
+</div>
 
   <script>
   'use strict';
@@ -35,11 +52,12 @@
   /* scatterplot */
   var yearlyBubbleChart = dc.bubbleChart('#monthly-bubble-chart');
   /* line chart */
-  //var moveChart = dc.lineChart('#monthly-move-chart');
+  var moveChart = dc.lineChart('#monthly-move-chart');
+  var volumeChart = dc.barChart('#monthly-volume-chart');
   /* histogram */
-  //var dayOfWeekChart = dc.rowChart('#day-of-week-chart');
+  var dayOfWeekChart = dc.rowChart('#day-of-week-chart');
   /* heatmap */
-  //??
+  //var heatMap = dc.heatMap('#heatmap');
 
 
   d3.csv('dataset_Facebook-table.csv', function(data) {
@@ -65,6 +83,42 @@
     var monthlyDimension = fb.dimension(function (d) {
       return d.PostMonth;
     });
+
+    var postImpressionsLikePageAvgByMonthGroup = monthlyDimension.group().reduce(
+    function (p, v) {
+        ++p.days;
+        p.total += v.LifetimePostImpressionsbypeoplewhohavelikedyourPage;
+        p.avg = Math.round(p.total / p.days);
+        return p;
+    },
+    function (p, v) {
+        --p.days;
+        p.total -= v.LifetimePostImpressionsbypeoplewhohavelikedyourPage;
+        p.avg = Math.round(p.total / p.days);
+        return p;
+    },
+    function () {
+        return {days: 0, total: 0, avg: 0};
+    }
+);
+
+    var likeAvgByMonthGroup = monthlyDimension.group().reduce(
+    function (p, v) {
+        ++p.days;
+        p.total += v.PageTotalLikes;
+        p.avg = Math.round(p.total / p.days);
+        return p;
+    },
+    function (p, v) {
+        --p.days;
+        p.total -= v.PageTotalLikes;
+        p.avg = p.days ? Math.round(p.total / p.days) : 0;
+        return p;
+    },
+    function () {
+        return {days: 0, total: 0, avg: 0};
+    }
+);
 
 
     var monthlyPerformanceGroup = monthlyDimension.group().reduce(
@@ -121,7 +175,7 @@ yearlyBubbleChart
     .dimension(monthlyDimension)
     .group(monthlyPerformanceGroup)
     .colors(colorbrewer.RdYlGn[9])
-    .colorDomain([0, 2300000])
+    .colorDomain([200000, 2300000])
 
     .colorAccessor(function (d) {
         return d.value.impressionsGain;
@@ -174,6 +228,75 @@ yearlyBubbleChart
     .yAxis().tickFormat(function (v) {
         return v + '%';
     });
+
+
+  dayOfWeekChart
+      .width(180)
+      .height(180)
+      .margins({top: 20, left: 10, right: 10, bottom: 20})
+      .group(dayOfWeekGroup)
+      .dimension(dayOfWeek)
+
+      .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
+      .label(function (d) {
+          return d.key.split('.')[1];
+      })
+
+      .title(function (d) {
+          return d.value;
+      })
+
+      .elasticX(true)
+      .xAxis().ticks(4);
+
+  moveChart
+      .renderArea(true)
+      .width(990)
+      .height(200)
+      .transitionDuration(1000)
+      .margins({top: 30, right: 50, bottom: 25, left: 40})
+      .dimension(monthlyDimension)
+      .mouseZoomable(true)
+
+      .rangeChart(volumeChart)
+      .x(d3.scale.linear().domain([1, 12]))
+      .y(d3.scale.linear().domain([80000, 160000]))
+      .elasticY(false)
+      .renderHorizontalGridLines(true)
+
+      .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
+      .brushOn(false)
+
+      .group(likeAvgByMonthGroup, 'Monthly Like Average')
+      .valueAccessor(function (d) {
+          return d.value.avg;
+      })
+
+      .stack(postImpressionsLikePageAvgByMonthGroup, 'Lifetime Post Impressions by people who have liked your Page', function (d) {
+          return d.value.avg;
+      })
+
+      .title(function (d) {
+          var value = d.value.avg ? d.value.avg : d.value;
+          if (isNaN(value)) {
+              value = 0;
+          }
+          return nameOfMonth(d.key) + '\n' + numberFormat(value);
+      })
+      .yAxis().ticks(7);
+      moveChart.xAxisLabel
+
+
+  volumeChart
+      .width(990) /* dc.barChart('#monthly-volume-chart', 'chartGroup'); */
+      .height(40)
+      .margins({top: 0, right: 50, bottom: 20, left: 40})
+      .dimension(monthlyDimension)
+      .group(postImpressionsLikePageAvgByMonthGroup)
+      .centerBar(true)
+      .gap(1)
+      .x(d3.scale.linear().domain([0, 12]));
+
 
     dc.renderAll();
 
