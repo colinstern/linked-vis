@@ -10,10 +10,12 @@
   <script type="text/javascript" src="colorbrewer.js"></script>
   <style>
   </style>
-  <title>YOLO</title>
+  <title>Facebook Statistics</title>
 </head>
 
 <body>
+
+  <h1>Facebook Performance Metrics</h1>
 
   <div class="row">
     <div id="monthly-bubble-chart" class="dc-chart">
@@ -50,7 +52,7 @@
 
 <div class="row">
   <div id="heatmap">
-       <strong>HeatMap</strong>
+       <strong>Lifetime Total Post Impressions by Post Type and Hour</strong>
        <a class="reset" href="javascript:heatMap.filterAll();dc.redrawAll();" style="display: none;">reset</a>
        <div class="clearfix"></div>
    </div>
@@ -76,6 +78,10 @@
 
   d3.csv('dataset_Facebook-table.csv', function(data) {
     var numberFormat = d3.format('r');
+
+    var commaFormat = d3.format('0,000');
+
+    var hourFormat = d3.time.format("%I %p");
 
     data.forEach(function (d) {
       d.PageTotalLikes = +d.PageTotalLikes;
@@ -181,9 +187,11 @@ function nameOfMonth (d) {
   return name[d - 1];
 }
 
+var typeDimension = fb.dimension(function(d) { return [d.PostHour, d.Type]; });
+
 var hourOfTheWeekdayDimension = fb.dimension(function(d) { return [d.PostHour, d.PostMonth]; });
 
-var percentageGainByHourOfWeekGroup = hourOfTheWeekdayDimension.group().reduce(
+var percentageGainByHourOfTypeGroup = typeDimension.group().reduce(
 /* callback for when data is added to the current filter results */
 function (p, v) {
     ++p.count;
@@ -221,7 +229,7 @@ function () {
 );
 
 var heatColorMapping = d3.scale.linear()
-    .domain([-23, 0, 23])
+    .domain([100, 100000, 2000000])
     .range(["red", "#e5e5e5", "green"]);
 
 yearlyBubbleChart
@@ -329,7 +337,7 @@ yearlyBubbleChart
           return d.value.avg;
       })
 
-      .stack(postImpressionsAvgByMonthGroup, 'Post Impressions', function (d) {
+      .stack(postImpressionsAvgByMonthGroup, 'Average Post Impressions', function (d) {
           return d.value.avg;
       })
 
@@ -364,16 +372,16 @@ yearlyBubbleChart
       .width(12 * 80 + 80)
       .height(27 * 10 + 40)
       .dimension(hourOfTheWeekdayDimension)
-      .group(percentageGainByHourOfWeekGroup)
+      .group(percentageGainByHourOfTypeGroup)
       .keyAccessor(function(d) { return d.key[0]; })
       .valueAccessor(function(d) { return d.key[1]; })
-      .colorAccessor(function(d) { return (d.value.percentageGain - d.value.min)/(d.value.max - d.value.min) * (23 - -23) - 23); })
+      .colorAccessor(function(d) { return d.value.impressionsGain; })
       .title(function(d) {
-          return " Hour:   " + d.key[0] + "\n" +
-                 "Weekday:   " + d.key[1] + "\n" +
-                 "Gain:   " + d.value.percentageGain + "%" + "\n" +
-                 "Min:   " + d.value.min + "%" + "\n" +
-                 "Max:   " + d.value.max + "%";})
+        var date = new Date();
+        date.setHours(d.key[0],0,0,0);
+          return " Hour:   " + hourFormat(date) + "\n" +
+                 "Type:   " + d.key[1] + "\n" +
+                 "Impressions:   " + commaFormat(d.value.impressionsGain) + "\n";})
       .colors(heatColorMapping);
 
 
