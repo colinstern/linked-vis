@@ -371,7 +371,7 @@ yearlyBubbleChart
   heatMap
       .width(12 * 80 + 80)
       .height(27 * 10 + 40)
-      .dimension(hourOfTheWeekdayDimension)
+      .dimension(typeDimension)
       .group(percentageGainByHourOfTypeGroup)
       .keyAccessor(function(d) { return d.key[0]; })
       .valueAccessor(function(d) { return d.key[1]; })
@@ -384,6 +384,8 @@ yearlyBubbleChart
                  "Impressions:   " + commaFormat(d.value.impressionsGain) + "\n";})
       .colors(heatColorMapping);
 
+      heatMap.xBorderRadius(0);
+      heatMap.yBorderRadius(0);
 
     dc.renderAll();
 
