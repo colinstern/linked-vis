@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <head>
   <meta charset="utf-8">
-  <link rel="stylesheet" type="text/css" href="https://dc-js.github.io/dc.js/css/dc.css" />
-  <script src="https://dc-js.github.io/dc.js/js/d3.js"></script>
-  <script src="https://dc-js.github.io/dc.js/js/crossfilter.js"></script>
-  <script src="https://dc-js.github.io/dc.js/js/dc.js"></script>
-  <script src="https://rawgit.com/crossfilter/reductio/master/reductio.js"></script>
-  <script src="https://npmcdn.com/universe@latest/universe.js"></script>
-  <script type="text/javascript" src="colorbrewer.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/dc.css" />
+  <script src="js/d3.js"></script>
+  <script src="js/crossfilter.js"></script>
+  <script src="js/dc.js"></script>
+  <script src="js/reductio.js"></script>
+  <script src="js/universe.js"></script>
+  <script type="text/javascript" src="js/colorbrewer.js"></script>
   <style>
   </style>
   <title>Facebook Statistics</title>
@@ -76,7 +76,7 @@
   var heatMap = dc.heatMap('#heatmap');
 
 
-  d3.csv('dataset_Facebook-table.csv', function(data) {
+  d3.csv('data/dataset_Facebook-table.csv', function(data) {
     var numberFormat = d3.format('r');
 
     var commaFormat = d3.format('0,000');
