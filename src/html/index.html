@@ -26,7 +26,7 @@
 
 <div class="row">
   <div id="day-of-week-chart">
-       <strong>Day of Week</strong>
+       <strong>Impressions by Day of Week</strong>
        <a class="reset" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
        <div class="clearfix"></div>
    </div>
@@ -40,6 +40,20 @@
            style="display: none;">reset</a>
         <div class="clearfix"></div>
     </div>
+</div>
+
+<div class="row">
+    <div id="monthly-volume-chart">
+    </div>
+    <p class="muted pull-right" style="margin-right: 15px;"></p>
+</div>
+
+<div class="row">
+  <div id="heatmap">
+       <strong>HeatMap</strong>
+       <a class="reset" href="javascript:heatMap.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+       <div class="clearfix"></div>
+   </div>
 </div>
 
   <script>
@@ -57,7 +71,7 @@
   /* histogram */
   var dayOfWeekChart = dc.rowChart('#day-of-week-chart');
   /* heatmap */
-  //var heatMap = dc.heatMap('#heatmap');
+  var heatMap = dc.heatMap('#heatmap');
 
 
   d3.csv('dataset_Facebook-table.csv', function(data) {
@@ -84,16 +98,16 @@
       return d.PostMonth;
     });
 
-    var postImpressionsLikePageAvgByMonthGroup = monthlyDimension.group().reduce(
+    var postImpressionsAvgByMonthGroup = monthlyDimension.group().reduce(
     function (p, v) {
         ++p.days;
-        p.total += v.LifetimePostImpressionsbypeoplewhohavelikedyourPage;
+        p.total += v.LifetimePostTotalImpressions;
         p.avg = Math.round(p.total / p.days);
         return p;
     },
     function (p, v) {
         --p.days;
-        p.total -= v.LifetimePostImpressionsbypeoplewhohavelikedyourPage;
+        p.total -= v.LifetimePostTotalImpressions;
         p.avg = Math.round(p.total / p.days);
         return p;
     },
@@ -167,6 +181,49 @@ function nameOfMonth (d) {
   return name[d - 1];
 }
 
+var hourOfTheWeekdayDimension = fb.dimension(function(d) { return [d.PostHour, d.PostMonth]; });
+
+var percentageGainByHourOfWeekGroup = hourOfTheWeekdayDimension.group().reduce(
+/* callback for when data is added to the current filter results */
+function (p, v) {
+    ++p.count;
+    p.impressionsGain += v.LifetimePostTotalImpressions;
+    p.usersGain += v.LifetimeEngagedUsers;
+    p.avgImpressions = p.impressionsGain / p.count;
+    p.percentageGain = p.avgImpressions ? Math.round((p.impressionsGain / p.avgImpressions) * 100) : 0;
+    p.min = p.percentageGain < p.min ? p.percentageGain : p.min;
+    p.max = p.percentageGain > p.max ? p.percentageGain : p.max;
+    return p;
+},
+/* callback for when data is removed from the current filter results */
+function (p, v) {
+    --p.count;
+    p.impressionsGain -= v.LifetimePostTotalImpressions;
+    p.usersGain -= v.LifetimeEngagedUsers;
+    p.avgImpressions = p.impressionsGain / p.count;
+    p.percentageGain = p.avgImpressions ? Math.round((p.impressionsGain / p.avgImpressions) * 100) : 0;
+    p.min = p.percentageGain < p.min ? p.percentageGain : p.min;
+    p.max = p.percentageGain > p.max ? p.percentageGain : p.max;
+    return p;
+},
+/* initialize p */
+function () {
+    return {
+        count: 0,
+        impressionsGain: 0,
+        usersGain: 0,
+        avgImpressions: 0,
+        percentageGain: 0,
+        min: 10000,
+        max: -10000
+    };
+}
+);
+
+var heatColorMapping = d3.scale.linear()
+    .domain([-23, 0, 23])
+    .range(["red", "#e5e5e5", "green"]);
+
 yearlyBubbleChart
     .width(990)
     .height(240)
@@ -194,12 +251,12 @@ yearlyBubbleChart
     })
 
     .maxBubbleRelativeSize(0.3)
-    .x(d3.scale.linear().domain([0, 250000]))
-    .y(d3.scale.linear().domain([0, 60000]))
+    .x(d3.scale.linear().domain([170000, 2400000]))
+    .y(d3.scale.linear().domain([1700, 6800]))
     .r(d3.scale.linear().domain([0, 500000]))
 
-    .elasticY(true)
-    .elasticX(true)
+    //.elasticY(true)
+    //.elasticX(true)
 
     .yAxisPadding(100)
     .xAxisPadding(500)
@@ -260,7 +317,7 @@ yearlyBubbleChart
 
       .rangeChart(volumeChart)
       .x(d3.scale.linear().domain([1, 12]))
-      .y(d3.scale.linear().domain([80000, 160000]))
+      .y(d3.scale.linear().domain([80000, 190000]))
       .elasticY(false)
       .renderHorizontalGridLines(true)
 
@@ -272,7 +329,7 @@ yearlyBubbleChart
           return d.value.avg;
       })
 
-      .stack(postImpressionsLikePageAvgByMonthGroup, 'Lifetime Post Impressions by people who have liked your Page', function (d) {
+      .stack(postImpressionsAvgByMonthGroup, 'Post Impressions', function (d) {
           return d.value.avg;
       })
 
@@ -283,8 +340,9 @@ yearlyBubbleChart
           }
           return nameOfMonth(d.key) + '\n' + numberFormat(value);
       })
+
+      .yAxisLabel('')
       .yAxis().ticks(7);
-      moveChart.xAxisLabel
 
 
   volumeChart
@@ -292,10 +350,31 @@ yearlyBubbleChart
       .height(40)
       .margins({top: 0, right: 50, bottom: 20, left: 40})
       .dimension(monthlyDimension)
-      .group(postImpressionsLikePageAvgByMonthGroup)
+      .group(postImpressionsAvgByMonthGroup)
+      .valueAccessor(function (d) {
+          return d.value.avg;
+      })
       .centerBar(true)
       .gap(1)
-      .x(d3.scale.linear().domain([0, 12]));
+      .x(d3.scale.linear().domain([1, 12]))
+      .yAxisLabel('')
+      .yAxis().ticks(2);
+
+  heatMap
+      .width(12 * 80 + 80)
+      .height(27 * 10 + 40)
+      .dimension(hourOfTheWeekdayDimension)
+      .group(percentageGainByHourOfWeekGroup)
+      .keyAccessor(function(d) { return d.key[0]; })
+      .valueAccessor(function(d) { return d.key[1]; })
+      .colorAccessor(function(d) { return (d.value.percentageGain - d.value.min)/(d.value.max - d.value.min) * (23 - -23) - 23); })
+      .title(function(d) {
+          return " Hour:   " + d.key[0] + "\n" +
+                 "Weekday:   " + d.key[1] + "\n" +
+                 "Gain:   " + d.value.percentageGain + "%" + "\n" +
+                 "Min:   " + d.value.min + "%" + "\n" +
+                 "Max:   " + d.value.max + "%";})
+      .colors(heatColorMapping);
 
 
     dc.renderAll();
