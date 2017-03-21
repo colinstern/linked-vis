@@ -11,6 +11,13 @@
   <style>
   </style>
   <title>Facebook Statistics</title>
+  <style>
+  #rectangle{
+    width:200px;
+    height:100px;
+    background: blue;
+  }
+  </style>
 </head>
 
 <body>
@@ -27,16 +34,26 @@
 </div>
 
 <div class="row">
+
+  <div id="fluctuation-chart">
+
+       <strong>Total Likes by Month</strong>
+       <a class="reset" href="javascript:fluctuationChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+       <div class="clearfix"></div>
+   </div>
+
   <div id="day-of-week-chart">
        <strong>Posts by Day of Week</strong>
        <a class="reset" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
        <div class="clearfix"></div>
    </div>
+
+
 </div>
 
 <div class="row">
     <div id="monthly-move-chart">
-        <strong>Monthly Like Chart</strong>
+        <strong>Monthly Page Likes and Enagaged Users Chart</strong>
         <span class="reset" style="display: none;">range: <span class="filter"></span></span>
         <a class="reset" href="javascript:moveChart.filterAll();volumeChart.filterAll();dc.redrawAll();"
            style="display: none;">reset</a>
@@ -72,6 +89,7 @@
   var volumeChart = dc.barChart('#monthly-volume-chart');
   /* histogram */
   var dayOfWeekChart = dc.rowChart('#day-of-week-chart');
+  var fluctuationChart = dc.barChart('#fluctuation-chart');
   /* heatmap */
   var heatMap = dc.heatMap('#heatmap');
 
@@ -183,6 +201,12 @@ var dayOfWeek = fb.dimension(function (d) {
     var name = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     return day + '.' + name[day - 1];
 });
+
+var likes = fb.dimension(function (d) {
+    return d.like;
+});
+var likesGroup = likes.group();
+
 var dayOfWeekGroup = dayOfWeek.group();
 
 function nameOfMonth (d) {
@@ -239,7 +263,7 @@ yearlyBubbleChart
     .width(990)
     .height(240)
     .transitionDuration(1500)
-    .margins({top: 10, right: 50, bottom: 30, left: 40})
+    .margins({top: 10, right: 50, bottom: 30, left: 60})
     .dimension(monthlyDimension)
     .group(monthlyPerformanceGroup)
     .colors(colorbrewer.RdYlGn[9])
@@ -311,11 +335,39 @@ yearlyBubbleChart
       })
 
       .title(function (d) {
-          return d.value;
+          return d.value + " Posts";
       })
 
       .elasticX(true)
       .xAxis().ticks(4);
+
+  fluctuationChart /* dc.barChart('#volume-month-chart', 'chartGroup') */
+        .width(490)
+        .height(180)
+        .margins({top: 10, right: 50, bottom: 30, left: 55})
+        .dimension(monthlyDimension)
+        .group(monthlyLikeGroup)
+        .elasticY(true)
+        .elasticX(true)
+
+        .centerBar(true)
+        .gap(1)
+
+        //.round(dc.round.floor)
+        //.alwaysUseRounding(true)
+        .x(d3.scale.linear().domain([-25, 25]))
+        .renderHorizontalGridLines(true)
+
+        .filterPrinter(function (filters) {
+            var filter = filters[0], s = '';
+            s += nameOfMonth(filter[0]) + '% -> ' + nameOfMonth(filter[1]) + '%';
+            return s;
+        });
+
+        fluctuationChart.xAxis().tickFormat(
+            function (v) { return nameOfMonth(v); });
+        fluctuationChart.yAxis().ticks(5);
+        fluctuationChart.xAxis().ticks(6);
 
   moveChart
       .renderArea(true)
