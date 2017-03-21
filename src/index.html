@@ -94,7 +94,7 @@
       d.LifetimeEngagedUsers = +d.LifetimeEngagedUsers;
       d.LifetimePostConsumptions = +d.LifetimePostConsumptions;
       d.LifetimePostImpressionsbypeoplewhohavelikedyourPage = +d.LifetimePostImpressionsbypeoplewhohavelikedyourPage;
-
+      d.like = +d.like;
     });
 
 
@@ -107,19 +107,19 @@
 
     var postImpressionsAvgByMonthGroup = monthlyDimension.group().reduce(
     function (p, v) {
-        ++p.days;
-        p.total += v.LifetimePostTotalImpressions;
-        p.avg = Math.round(p.total / p.days);
+        //++p.days;
+        p.total += v.LifetimeEngagedUsers;
+        //p.avg = Math.round(p.total / p.days);
         return p;
     },
     function (p, v) {
-        --p.days;
-        p.total -= v.LifetimePostTotalImpressions;
-        p.avg = Math.round(p.total / p.days);
+        //--p.days;
+        p.total -= v.LifetimeEngagedUsers;
+        //p.avg = Math.round(p.total / p.days);
         return p;
     },
     function () {
-        return {days: 0, total: 0, avg: 0};
+        return {total: 0};
     }
 );
 
@@ -287,9 +287,9 @@ yearlyBubbleChart
     .title(function (p) {
         return [
             nameOfMonth(p.key),
-            'Impressions Gain: ' + numberFormat(p.value.impressionsGain),
-            'Impressions Gain in Percentage: ' + numberFormat(p.value.likeImpressions) + '%',
-            'Total Lifetime Engaged Users: ' + numberFormat(p.value.usersGain)
+            'Impressions: ' + commaFormat(p.value.impressionsGain),
+            'Impressions From Page Likers: ' + commaFormat(p.value.likeImpressions),
+            'Total Lifetime Engaged Users: ' + commaFormat(p.value.usersGain)
         ].join('\n');
     })
 
@@ -335,13 +335,13 @@ yearlyBubbleChart
       .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
       .brushOn(false)
 
-      .group(likeAvgByMonthGroup, 'Monthly Like Average')
+      .group(likeAvgByMonthGroup, 'Page Likes')
       .valueAccessor(function (d) {
           return d.value.avg;
       })
 
-      .stack(postImpressionsAvgByMonthGroup, 'Average Post Impressions', function (d) {
-          return d.value.avg;
+      .stack(postImpressionsAvgByMonthGroup, 'Engaged Users', function (d) {
+          return d.value.total;
       })
 
       .title(function (d) {
@@ -351,8 +351,10 @@ yearlyBubbleChart
           }
           return nameOfMonth(d.key) + '\n' + numberFormat(value);
       })
-
-      .yAxisLabel('')
+      .xAxis().tickFormat(function (v) {
+          return nameOfMonth(v);
+      });
+      moveChart.yAxisLabel('')
       .yAxis().ticks(7);
 
 
@@ -363,13 +365,16 @@ yearlyBubbleChart
       .dimension(monthlyDimension)
       .group(postImpressionsAvgByMonthGroup)
       .valueAccessor(function (d) {
-          return d.value.avg;
+          return d.value.total;
       })
       .centerBar(true)
       .gap(1)
       .x(d3.scale.linear().domain([1, 12]))
       .yAxisLabel('')
-      .yAxis().ticks(2);
+      .xAxis().tickFormat(function (v) {
+          return nameOfMonth(v);
+      });
+      volumeChart.yAxis().ticks(0);
 
   heatMap
       .width(12 * 80 + 80)
