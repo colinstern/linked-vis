@@ -19,7 +19,7 @@
 
   <div class="row">
     <div id="monthly-bubble-chart" class="dc-chart">
-        <strong>Monthly Performance</strong> (radius: engaged users, color: lifetime total post impressions gain)
+        <strong>Aggregate Post Performance by Month of Posting</strong> (radius: engaged users, color: lifetime total post impressions gain)
         <a class="reset" href="javascript:yearlyBubbleChart.filterAll();dc.redrawAll();"
            style="display: none;">reset</a>
         <div class="clearfix"></div>
@@ -28,7 +28,7 @@
 
 <div class="row">
   <div id="day-of-week-chart">
-       <strong>Impressions by Day of Week</strong>
+       <strong>Posts by Day of Week</strong>
        <a class="reset" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
        <div class="clearfix"></div>
    </div>
@@ -94,6 +94,7 @@
       d.LifetimeEngagedUsers = +d.LifetimeEngagedUsers;
       d.LifetimePostConsumptions = +d.LifetimePostConsumptions;
       d.LifetimePostImpressionsbypeoplewhohavelikedyourPage = +d.LifetimePostImpressionsbypeoplewhohavelikedyourPage;
+
     });
 
 
@@ -147,8 +148,9 @@
         ++p.count;
         p.impressionsGain += v.LifetimePostTotalImpressions;
         p.usersGain += v.LifetimeEngagedUsers;
-        p.avgImpressions = p.impressionsGain / p.count;
-        p.percentageGain = p.avgImpressions ? Math.round((p.impressionsGain / p.avgImpressions) * 100) : 0;
+        p.likeImpressions += v.LifetimePostImpressionsbypeoplewhohavelikedyourPage;
+        // p.avgImpressions = p.impressionsGain / p.count;
+        // p.percentageGain = p.avgImpressions ? Math.round((p.impressionsGain / p.avgImpressions) * 100) : 0;
         return p;
     },
     /* callback for when data is removed from the current filter results */
@@ -156,8 +158,10 @@
         --p.count;
         p.impressionsGain -= v.LifetimePostTotalImpressions;
         p.usersGain -= v.LifetimeEngagedUsers;
-        p.avgImpressions = p.impressionsGain / p.count;
-        p.percentageGain = p.avgImpressions ? Math.round((p.impressionsGain / p.avgImpressions) * 100) : 0;
+        p.likeImpressions -= v.LifetimePostImpressionsbypeoplewhohavelikedyourPage;
+        // p.avgImpressions = p.impressionsGain / p.count;
+        // p.percentageGain = p.avgImpressions ? Math.round((p.impressionsGain / p.avgImpressions) * 100) : 0;
+	return p;
     },
     /* initialize p */
     function () {
@@ -165,8 +169,7 @@
             count: 0,
             impressionsGain: 0,
             usersGain: 0,
-            avgImpressions: 0,
-            percentageGain: 0,
+            likeImpressions: 0
         };
     }
 );
@@ -251,7 +254,7 @@ yearlyBubbleChart
     })
 
     .valueAccessor(function (p) {
-        return p.value.percentageGain;
+        return p.value.likeImpressions;
     })
 
     .radiusValueAccessor(function (p) {
@@ -263,8 +266,8 @@ yearlyBubbleChart
     .y(d3.scale.linear().domain([1700, 6800]))
     .r(d3.scale.linear().domain([0, 500000]))
 
-    //.elasticY(true)
-    //.elasticX(true)
+    .elasticY(true)
+    .elasticX(true)
 
     .yAxisPadding(100)
     .xAxisPadding(500)
@@ -272,8 +275,8 @@ yearlyBubbleChart
     .renderHorizontalGridLines(true)
     .renderVerticalGridLines(true)
 
-    .xAxisLabel('Lifetime Total Post Impressions Gain')
-    .yAxisLabel('Gain %')
+    .xAxisLabel('Lifetime Aggregate Post Impressions')
+    .yAxisLabel('Impressions From Likers')
 
     .renderLabel(true)
     .label(function (p) {
@@ -285,13 +288,13 @@ yearlyBubbleChart
         return [
             nameOfMonth(p.key),
             'Impressions Gain: ' + numberFormat(p.value.impressionsGain),
-            'Impressions Gain in Percentage: ' + numberFormat(p.value.percentageGain) + '%',
+            'Impressions Gain in Percentage: ' + numberFormat(p.value.likeImpressions) + '%',
             'Total Lifetime Engaged Users: ' + numberFormat(p.value.usersGain)
         ].join('\n');
     })
 
     .yAxis().tickFormat(function (v) {
-        return v + '%';
+        return commaFormat(v);
     });
 
 
@@ -326,7 +329,7 @@ yearlyBubbleChart
       .rangeChart(volumeChart)
       .x(d3.scale.linear().domain([1, 12]))
       .y(d3.scale.linear().domain([80000, 190000]))
-      .elasticY(false)
+      .elasticY(true)
       .renderHorizontalGridLines(true)
 
       .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
