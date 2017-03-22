@@ -2,6 +2,7 @@
 <head>
   <meta charset="utf-8">
   <link rel="stylesheet" type="text/css" href="css/dc.css" />
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
   <script src="js/d3.js"></script>
   <script src="js/crossfilter.js"></script>
   <script src="js/dc.js"></script>
@@ -22,6 +23,8 @@
 
 <body>
 
+<div class="container">
+
   <h1>Facebook Performance Metrics</h1>
 
   <div class="row">
@@ -31,9 +34,8 @@
            style="display: none;">reset</a>
         <div class="clearfix"></div>
       </div>
-    <span>Note the positive correlation between aggregate lifetime post impressions and aggregate lifetime post impressions from people who liked the page. This could imply that a significant amount of page traffic comes from regularly returning users. Also note that there is no clear correlation between the month and the number of impressions. </span>
+    <p style="padding-bottom:15px;">Note the positive correlation between aggregate lifetime post impressions and aggregate lifetime post impressions from people who liked the page. This could imply that a significant amount of page traffic comes from regularly returning users. Also note that there is no clear correlation between the month and the number of impressions. </p>
 </div>
-<div class="rectangle"/>
 
 
 <div class="row">
@@ -51,7 +53,7 @@
     </div>
     <p class="muted pull-right" style="margin-right: 15px;"></p>
 </div>
-<span>Note the positive correlation between page likes and engaged users, which could imply that engaged users will like the page. Also note the tapering off of page likes. </span>
+<p style="padding-bottom:15px;">Note the positive correlation between page likes and engaged users, which could imply that engaged users will like the page. Also note the tapering off of page likes. </p>
 
 <div class="row">
   <div id="heatmap">
@@ -59,34 +61,36 @@
        <a class="reset" href="javascript:heatMap.filterAll();dc.redrawAll();" style="display: none;">reset</a>
        <div class="clearfix"></div>
    </div>
-  <span>Note that posts posted before 2 PM, and especially photo posts, correlate with many impressions. Also note that all posts posted after 2 PM correlate with a relatively small number of impressions.</span>
 </div>
 
 <div class="row">
   <div id="heatmapKey">
     <div class="clearfix"></div>
   </div>
+  <p style="padding-bottom:15px;">Note that posts posted before 2 PM, and especially photo posts, correlate with many impressions. Also note that all posts posted after 2 PM correlate with a relatively small number of impressions.</p>
 </div>
 
 
 <div class="row">
-
   <div id="fluctuation-chart">
-
        <strong>Total Likes by Month</strong>
        <a class="reset" href="javascript:fluctuationChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
        <div class="clearfix"></div>
    </div>
-   <span>Note the overall positive trend in the number of likes each month. Note the spikes in certain months, such as April and October.</span>
-</div>
 
-<div class="row">
   <div id="day-of-week-chart">
        <strong>Posts by Day of Week</strong>
        <a class="reset" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
        <div class="clearfix"></div>
-   </div>
-<span>Note the greater number of postings on the weekend.</span>
+  </div>
+</div>
+
+<div class="row">
+  <p style="padding-bottom:15px;">Note the overall positive trend in the number of likes each month. Note the spikes in certain months, such as April and October.</p>
+  <p style="padding-bottom:15px;">Note the greater number of postings on the weekend.</p>
+  <div class="select-container">
+  </div>
+</div>
 
 </div>
 
@@ -523,6 +527,16 @@ yearlyBubbleChart
 
       heatmapChart.xBorderRadius(0);
       heatmapChart.yBorderRadius(0);
+
+// create a select menu under #select-container using the default global chart group
+var select = dc.selectMenu('#select-container')
+               .dimension(monthlyDimension)
+               .group(likeAvgByMonthGroup);
+// the option text can be set via the title() function
+// by default the option text is '`key`: `value`'
+select.title(function (d){
+    return 'STATE: ' + d.key;
+})
 
     dc.renderAll();
 
