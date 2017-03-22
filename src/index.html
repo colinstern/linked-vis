@@ -20,6 +20,19 @@
 <div class="container">
 
   <h1>Facebook Performance Metrics</h1>
+  
+  <div class="row">
+      <div>
+          <div class="dc-data-count">
+              <span class="filter-count"></span> selected out of <span class="total-count"></span> records | <a
+                  href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
+          </div>
+      </div>
+      <table class="table table-hover dc-data-table">
+      </table>
+  </div>
+
+  <div class="clearfix"></div>
 
   <div class="row">
     <div id="monthly-bubble-chart" class="dc-chart">
@@ -127,6 +140,9 @@
   var heatSelect = dc.selectMenu('#heat-select');
 
   var bubbleSelect = dc.selectMenu('#bubble-select');
+
+  /* count selected records */
+  var fbCount = dc.dataCount('.dc-data-count');
 
 
   d3.csv('data/dataset_Facebook-table.csv', function(data) {
@@ -544,6 +560,19 @@ yearlyBubbleChart
       heatmapChart.xBorderRadius(0);
       heatmapChart.yBorderRadius(0);
 
+      fbCount /* dc.dataCount('.dc-data-count', 'chartGroup'); */
+          .dimension(fb)
+          .group(all)
+          // (_optional_) `.html` sets different html when some records or all records are selected.
+          // `.html` replaces everything in the anchor with the html given using the following function.
+          // `%filter-count` and `%total-count` are replaced with the values obtained.
+          .html({
+              some: '<strong>%filter-count</strong> selected out of <strong>%total-count</strong> records' +
+                  ' | <a href=\'javascript:dc.filterAll(); dc.renderAll();\'>Reset All</a>',
+              all: 'All records selected. Please click on the graph to apply filters.'
+          });
+
+
 // create a select menu under #select-container using the default global chart group
       heatSelect
                .dimension(monthlyDimension)
@@ -555,15 +584,15 @@ yearlyBubbleChart
                     return nameOfMonth(d.key);
                 });
 
-      heatSelect
-               .dimension(monthlyDimension)
-               .group(monthlyDimension.group())
+      bubbleSelect
+               .dimension(typeDimension)
+               .group(typeDimension.group())
                .controlsUseVisibility(true);
                 // the option text can be set via the title() function
                 // by default the option text is '`key`: `value`'
-                heatSelect.title(function (d){
-                    return nameOfMonth(d.key);
-                });      
+                bubbleSelect.title(function (d){
+                    return d.key[1];
+                });
 
     dc.renderAll();
 
