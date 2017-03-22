@@ -12,13 +12,7 @@
   <style>
   </style>
   <title>Facebook Statistics</title>
-  <style>
-  #rectangle{
-    width:200px;
-    height:100px;
-    /*background: blue;*/
-  }
-  </style>
+
 </head>
 
 <body>
@@ -33,6 +27,16 @@
         <a class="reset" href="javascript:yearlyBubbleChart.filterAll();dc.redrawAll();"
            style="display: none;">reset</a>
         <div class="clearfix"></div>
+        <div class="row">
+          <div id="bubble-select">
+            <div>
+              <a class="reset"
+                 href="javascript:bubbleSelect.filterAll();dc.redrawAll();"
+                 style="visibility: hidden;">reset</a>
+            </div>
+          </div>
+        </div>
+
       </div>
     <p style="padding-bottom:15px;">Note the positive correlation between aggregate lifetime post impressions and aggregate lifetime post impressions from people who liked the page. This could imply that a significant amount of page traffic comes from regularly returning users. Also note that there is no clear correlation between the month and the number of impressions. </p>
 </div>
@@ -60,6 +64,15 @@
        <strong>Lifetime Total Post Impressions by Post Type and Hour</strong> (red: few impressions, green: many impressions)
        <a class="reset" href="javascript:heatMap.filterAll();dc.redrawAll();" style="display: none;">reset</a>
        <div class="clearfix"></div>
+       <div class="row">
+         <div id="heat-select">
+           <div>
+             <a class="reset"
+                href="javascript:heatSelect.filterAll();dc.redrawAll();"
+                style="visibility: hidden;">reset</a>
+           </div>
+         </div>
+       </div>
    </div>
 </div>
 
@@ -88,8 +101,6 @@
 <div class="row">
   <p style="padding-bottom:15px;">Note the overall positive trend in the number of likes each month. Note the spikes in certain months, such as April and October.</p>
   <p style="padding-bottom:15px;">Note the greater number of postings on the weekend.</p>
-  <div class="select-container">
-  </div>
 </div>
 
 </div>
@@ -111,6 +122,11 @@
   var fluctuationChart = dc.barChart('#fluctuation-chart');
   /* heatmap */
   var heatMap = dc.heatMap('#heatmap');
+
+  /* selects */
+  var heatSelect = dc.selectMenu('#heat-select');
+
+  var bubbleSelect = dc.selectMenu('#bubble-select');
 
 
   d3.csv('data/dataset_Facebook-table.csv', function(data) {
@@ -529,14 +545,25 @@ yearlyBubbleChart
       heatmapChart.yBorderRadius(0);
 
 // create a select menu under #select-container using the default global chart group
-var select = dc.selectMenu('#select-container')
+      heatSelect
                .dimension(monthlyDimension)
-               .group(likeAvgByMonthGroup);
-// the option text can be set via the title() function
-// by default the option text is '`key`: `value`'
-select.title(function (d){
-    return 'STATE: ' + d.key;
-})
+               .group(monthlyDimension.group())
+               .controlsUseVisibility(true);
+                // the option text can be set via the title() function
+                // by default the option text is '`key`: `value`'
+                heatSelect.title(function (d){
+                    return nameOfMonth(d.key);
+                });
+
+      heatSelect
+               .dimension(monthlyDimension)
+               .group(monthlyDimension.group())
+               .controlsUseVisibility(true);
+                // the option text can be set via the title() function
+                // by default the option text is '`key`: `value`'
+                heatSelect.title(function (d){
+                    return nameOfMonth(d.key);
+                });      
 
     dc.renderAll();
 
