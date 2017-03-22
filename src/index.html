@@ -62,6 +62,12 @@
   <span>Note that posts posted before 2 PM, and especially photo posts, correlate with many impressions. Also note that all posts posted after 2 PM correlate with a relatively small number of impressions.</span>
 </div>
 
+<div class="row">
+  <div id="heatmapKey">
+    <div class="clearfix"></div>
+  </div>
+</div>
+
 
 <div class="row">
 
@@ -80,7 +86,7 @@
        <a class="reset" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
        <div class="clearfix"></div>
    </div>
-<span>Note the greater number of postings on the weekend.</span> 
+<span>Note the greater number of postings on the weekend.</span>
 
 </div>
 
@@ -456,10 +462,70 @@ yearlyBubbleChart
       heatMap.xBorderRadius(0);
       heatMap.yBorderRadius(0);
 
+
+      /* Heatmap legend */
+      var maxValue = 2389482;
+      var minValue = 570;
+
+      var range = maxValue - minValue;
+
+      var heatArr = [];
+      var hours = 24;
+      for (var i = 0; i < hours; i++) {
+        heatArr.push({
+          val: minValue + i / (hours - 1) * range,
+          index: i
+        });
+      }
+
+      var heat = crossfilter(heatArr);
+
+      var keyHeatmap = heat.dimension(function(d) {
+        return [d.index, 1];
+      });
+
+      var keyHeatmapGroup = keyHeatmap.group().reduceSum(function(d) {
+        return d.val;
+      });
+
+      var heatmapChart = dc.heatMap("#heatmapKey");
+
+      var heatKeyColorMapping = function(d) {
+        return d3.scale.linear().domain([minValue, maxValue]).range(["red", "green"])(d);
+      };
+
+      heatKeyColorMapping.domain = function() {
+        return [minValue, maxValue];
+      };
+
+      heatmapChart
+              .width(1038)
+              .height(80)
+              .dimension(keyHeatmap)
+              .group(keyHeatmapGroup)
+              .colorAccessor(function(d) {
+                return d.value;
+              })
+              .keyAccessor(function(d) { return d.key[0]; })
+              .valueAccessor(function(d) { return d.key[1]; })
+              .colsLabel(function(d){
+                return '';
+              })
+              .rowsLabel(function(d) {
+                return "Key";
+              })
+              .transitionDuration(0)
+              .title(function(d) {
+                return commaFormat(Math.round(d.value));
+              })
+              .colors(heatKeyColorMapping)
+              .calculateColorDomain();
+
+      heatmapChart.xBorderRadius(0);
+      heatmapChart.yBorderRadius(0);
+
     dc.renderAll();
 
   });
-
-
   </script>
 </body>
