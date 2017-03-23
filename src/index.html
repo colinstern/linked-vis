@@ -87,7 +87,7 @@
     <div id="monthly-line-chart">
         <strong>Monthly Page Likes and Enagaged Users Chart</strong>
         <span class="reset" style="display: none;">range: <span class="filter"></span></span>
-        <a class="reset" href="javascript:lineChart.filterAll();volumeChart.filterAll();dc.redrawAll();"
+        <a class="reset" href="javascript:lineChart.filterAll();likeChart.filterAll();dc.redrawAll();"
            style="display: none;">reset</a>
         <div class="clearfix"></div>
         <div class="row">
@@ -104,16 +104,16 @@
   </div>
 
 <div class="row">
-    <div id="monthly-volume-chart">
+    <div id="monthly-like-chart">
     </div>
     <p class="muted pull-right" style="margin-right: 15px;"></p>
 </div>
 <p style="padding-bottom:15px;">Note the positive correlation between page likes and engaged users, which could imply that engaged users will like the page. Also note the tapering off of page likes. </p>
 
 <div class="row">
-  <div id="fluctuation-chart">
+  <div id="monthly-likes-chart">
        <strong>Total Likes by Month</strong>
-       <a class="reset" href="javascript:fluctuationChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+       <a class="reset" href="javascript:monthlyLikesChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
        <div class="clearfix"></div>
        <div class="row">
          <div id="month-select">
@@ -154,18 +154,15 @@
   <script>
   'use strict';
 
-  /* jshint globalstrict: true */
-  /* global dc,d3,crossfilter,colorbrewer */
-
   /* Create chart objects */
   /* scatterplot */
   var yearlyBubbleChart = dc.bubbleChart('#monthly-bubble-chart');
   /* line chart */
   var lineChart = dc.lineChart('#monthly-line-chart');
-  var volumeChart = dc.barChart('#monthly-volume-chart');
+  var likeChart = dc.barChart('#monthly-like-chart');
   /* histogram */
   var dayOfWeekChart = dc.rowChart('#day-of-week-chart');
-  var fluctuationChart = dc.barChart('#fluctuation-chart');
+  var monthlyLikesChart = dc.barChart('#monthly-likes-chart');
   /* heatmap */
   var heatMap = dc.heatMap('#heatmap');
 
@@ -429,7 +426,7 @@ yearlyBubbleChart
       .elasticX(true)
       .xAxis().ticks(4);
 
-  fluctuationChart /* dc.barChart('#volume-month-chart', 'chartGroup') */
+  monthlyLikesChart /* dc.barChart('#volume-month-chart', 'chartGroup') */
         .width(490)
         .height(180)
         .margins({top: 10, right: 50, bottom: 30, left: 55})
@@ -452,10 +449,10 @@ yearlyBubbleChart
             return s;
         });
 
-        fluctuationChart.xAxis().tickFormat(
+        monthlyLikesChart.xAxis().tickFormat(
             function (v) { return nameOfMonth(v); });
-        fluctuationChart.yAxis().ticks(5);
-        fluctuationChart.xAxis().ticks(6);
+        monthlyLikesChart.yAxis().ticks(5);
+        monthlyLikesChart.xAxis().ticks(6);
 
   lineChart
       .renderArea(true)
@@ -466,7 +463,7 @@ yearlyBubbleChart
       .dimension(monthlyDimension)
       .mouseZoomable(true)
 
-      .rangeChart(volumeChart)
+      .rangeChart(likeChart)
       .x(d3.scale.linear().domain([1, 12]))
       .y(d3.scale.linear().domain([80000, 190000]))
       .elasticY(true)
@@ -498,8 +495,8 @@ yearlyBubbleChart
       .yAxis().ticks(7);
 
 
-  volumeChart
-      .width(990) /* dc.barChart('#monthly-volume-chart', 'chartGroup'); */
+  likeChart
+      .width(990) /* dc.barChart('#monthly-like-chart', 'chartGroup'); */
       .height(40)
       .margins({top: 0, right: 50, bottom: 20, left: 40})
       .dimension(monthlyDimension)
@@ -514,7 +511,7 @@ yearlyBubbleChart
       .xAxis().tickFormat(function (v) {
           return nameOfMonth(v);
       });
-      volumeChart.yAxis().ticks(0);
+      likeChart.yAxis().ticks(0);
 
   heatMap
       .width(12 * 80 + 80)
