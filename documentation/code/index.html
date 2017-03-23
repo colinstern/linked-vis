@@ -54,6 +54,12 @@
         </div>
 
       </div>
+
+      <div class="row">
+        <div id="bubbleKey">
+          <div class="clearfix"></div>
+        </div>
+      </div>
     <p style="padding-bottom:15px;">Note the positive correlation between aggregate lifetime post impressions and aggregate lifetime post impressions from people who liked the page. This could imply that a significant amount of page traffic comes from regularly returning users. Also note that there is no clear correlation between the month and the number of impressions. </p>
 </div>
 
@@ -599,6 +605,58 @@ yearlyBubbleChart
 
       heatmapChart.xBorderRadius(0);
       heatmapChart.yBorderRadius(0);
+
+      var bubbleMaxValue = 2181000;
+      var bubbleMinValue = 235000;
+
+      var bubbleRange = bubbleMaxValue - bubbleMinValue;
+
+      var bubbleArr = [];
+      var hours = 24;
+      for (var i = 0; i < hours; i++) {
+        bubbleArr.push({
+          val: bubbleMinValue + i / (hours - 1) * bubbleRange,
+          index: i
+        });
+      }
+
+      var bubble = crossfilter(bubbleArr);
+
+      var keyBubble = bubble.dimension(function(d) {
+        return [d.index, 1];
+      });
+
+      var keyBubbleGroup = keyBubble.group().reduceSum(function(d) {
+        return d.val;
+      });
+
+      var bubbleKey = dc.heatMap("#bubbleKey");
+
+      bubbleKey
+              .width(1020)
+              .height(80)
+              .dimension(keyBubble)
+              .group(keyBubbleGroup)
+              .colorAccessor(function(d) {
+                return d.value;
+              })
+              .keyAccessor(function(d) { return d.key[0]; })
+              .valueAccessor(function(d) { return d.key[1]; })
+              .colsLabel(function(d){
+                return '';
+              })
+              .rowsLabel(function(d) {
+                return "Key";
+              })
+              .transitionDuration(0)
+              .title(function(d) {
+                return commaFormat(Math.round(d.value));
+              })
+              .colors(heatKeyColorMapping)
+              .calculateColorDomain();
+
+      bubbleKey.xBorderRadius(0);
+      bubbleKey.yBorderRadius(0);
 
       fbCount /* dc.dataCount('.dc-data-count', 'chartGroup'); */
           .dimension(fb)
