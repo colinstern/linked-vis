@@ -35,9 +35,10 @@
 
   <div class="clearfix"></div>
 
+
   <div class="row">
     <div id="monthly-bubble-chart" class="dc-chart">
-        <strong>Aggregate Post Performance by Month of Posting</strong> (radius: engaged users, color: lifetime total post impressions)
+        <strong>Aggregate Post Performance by Month of Posting</strong> (radius: engaged users, color: lifetime aggregate post impressions)
         <a class="reset" href="javascript:yearlyBubbleChart.filterAll();dc.redrawAll();"
            style="display: none;">reset</a>
         <div class="clearfix"></div>
@@ -55,34 +56,6 @@
       </div>
     <p style="padding-bottom:15px;">Note the positive correlation between aggregate lifetime post impressions and aggregate lifetime post impressions from people who liked the page. This could imply that a significant amount of page traffic comes from regularly returning users. Also note that there is no clear correlation between the month and the number of impressions. </p>
 </div>
-
-
-<div class="row">
-    <div id="monthly-move-chart">
-        <strong>Monthly Page Likes and Enagaged Users Chart</strong>
-        <span class="reset" style="display: none;">range: <span class="filter"></span></span>
-        <a class="reset" href="javascript:moveChart.filterAll();volumeChart.filterAll();dc.redrawAll();"
-           style="display: none;">reset</a>
-        <div class="clearfix"></div>
-        <div class="row">
-          <div id="line-select">
-            <div>
-              <a class="reset"
-                 href="javascript:lineSelect.filterAll();dc.redrawAll();"
-                 style="visibility: hidden;">reset</a>
-             <p>Filter by post type</p>
-            </div>
-          </div>
-        </div>
-    </div>
-  </div>
-
-<div class="row">
-    <div id="monthly-volume-chart">
-    </div>
-    <p class="muted pull-right" style="margin-right: 15px;"></p>
-</div>
-<p style="padding-bottom:15px;">Note the positive correlation between page likes and engaged users, which could imply that engaged users will like the page. Also note the tapering off of page likes. </p>
 
 <div class="row">
   <div id="heatmap">
@@ -109,6 +82,33 @@
   <p style="padding-bottom:15px;">Note that posts posted before 2 PM, and especially photo posts, correlate with many impressions. Also note that all posts posted after 2 PM correlate with a relatively small number of impressions.</p>
 </div>
 
+
+<div class="row">
+    <div id="monthly-line-chart">
+        <strong>Monthly Page Likes and Enagaged Users Chart</strong>
+        <span class="reset" style="display: none;">range: <span class="filter"></span></span>
+        <a class="reset" href="javascript:lineChart.filterAll();volumeChart.filterAll();dc.redrawAll();"
+           style="display: none;">reset</a>
+        <div class="clearfix"></div>
+        <div class="row">
+          <div id="line-select">
+            <div>
+              <a class="reset"
+                 href="javascript:lineSelect.filterAll();dc.redrawAll();"
+                 style="visibility: hidden;">reset</a>
+             <p>Filter by post type</p>
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+
+<div class="row">
+    <div id="monthly-volume-chart">
+    </div>
+    <p class="muted pull-right" style="margin-right: 15px;"></p>
+</div>
+<p style="padding-bottom:15px;">Note the positive correlation between page likes and engaged users, which could imply that engaged users will like the page. Also note the tapering off of page likes. </p>
 
 <div class="row">
   <div id="fluctuation-chart">
@@ -161,7 +161,7 @@
   /* scatterplot */
   var yearlyBubbleChart = dc.bubbleChart('#monthly-bubble-chart');
   /* line chart */
-  var moveChart = dc.lineChart('#monthly-move-chart');
+  var lineChart = dc.lineChart('#monthly-line-chart');
   var volumeChart = dc.barChart('#monthly-volume-chart');
   /* histogram */
   var dayOfWeekChart = dc.rowChart('#day-of-week-chart');
@@ -457,7 +457,7 @@ yearlyBubbleChart
         fluctuationChart.yAxis().ticks(5);
         fluctuationChart.xAxis().ticks(6);
 
-  moveChart
+  lineChart
       .renderArea(true)
       .width(990)
       .height(200)
@@ -494,7 +494,7 @@ yearlyBubbleChart
       .xAxis().tickFormat(function (v) {
           return nameOfMonth(v);
       });
-      moveChart.yAxisLabel('')
+      lineChart.yAxisLabel('')
       .yAxis().ticks(7);
 
 
